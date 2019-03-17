@@ -13,45 +13,34 @@ good_queries_full_url = list(set(open('goodqueries_full_url.txt', 'r', encoding=
 
 # Will take 2% of each dataset to use for testing
 
-test_size = 20
-
-print('Shuffling')
-np.random.shuffle(bad_queries_tld)
-np.random.shuffle(good_queries_tld)
-np.random.shuffle(bad_queries_full_url)
-np.random.shuffle(good_queries_full_url)
-
-print('Splitting')
-bad_queries_tld_train, bad_queries_tld_test = bad_queries_tld[test_size:], bad_queries_tld[:test_size]
-good_queries_tld_train, good_queries_tld_test = good_queries_tld[test_size:], bad_queries_tld[:test_size]
-
-bad_queries_full_url_train, bad_queries_full_url_test = bad_queries_full_url[test_size:], bad_queries_full_url[:test_size]
-good_queries_full_url_train, good_queries_full_url_test = good_queries_full_url[test_size:], good_queries_full_url[:test_size]
-
 print('Assigning Categories')
-tld_all_train = bad_queries_tld_train + good_queries_tld_train
-tld_y_bad = [1 for i in range(0, len(bad_queries_tld_train))]
-tld_y_good = [0 for i in range(0, len(good_queries_tld_train))]
+tld_x = bad_queries_tld + good_queries_tld
+tld_y_bad = [1 for i in range(0, len(bad_queries_tld))]
+tld_y_good = [0 for i in range(0, len(good_queries_tld))]
 tld_y = tld_y_bad + tld_y_good
 
-full_url_all_train = bad_queries_full_url_train + good_queries_full_url_train
-full_url_y_bad = [1 for i in range(0, len(bad_queries_full_url_train))]
-full_url_y_good = [0 for i in range(0, len(good_queries_full_url_train))]
+full_url_x = good_queries_full_url + good_queries_full_url
+full_url_y_bad = [1 for i in range(0, len(bad_queries_full_url))]
+full_url_y_good = [0 for i in range(0, len(good_queries_full_url))]
 full_url_y = full_url_y_bad + full_url_y_good
 
 print('Vectorizing')
 tld_vectorizer = TfidfVectorizer(min_df=0.0, analyzer="char", sublinear_tf=True, ngram_range=(1, 3))
-tld_vector = tld_vectorizer.fit_transform(tld_all_train)
+tld_vector = tld_vectorizer.fit_transform(tld_x)
+tld_x_train, tld_x_test, tld_y_train, tld_y_test = train_test_split(tld_vector, tld_y)
 
 full_url_vectorizer = TfidfVectorizer(min_df=0.0, analyzer="char", sublinear_tf=True, ngram_range=(1, 3))
-full_url_vector = full_url_vectorizer.fit_transform(full_url_all_train)
+full_url_vector = full_url_vectorizer.fit_transform(full_url_x)
+full_x_bad_train, full_x_bad_test, full_y_bad_train, full_y_bad_test = train_test_split(full_url_vector, full_url_y)
+
 
 print('Training')
 tld_lgs = LogisticRegression(class_weight={1: 2 * len(bad_queries_tld_train) / len(good_queries_tld_train), 0: 1.0}, solver='lbfgs') # class_weight='balanced')
 tld_lgs.fit(tld_vector, tld_y)
 
+
 full_url_lgs = LogisticRegression(class_weight={1: 2 * len(bad_queries_full_url_train) / len(good_queries_full_url_train), 0: 1.0}, solver='lbfgs') # class_weight='balanced')
-full_url_lgs.fit(full_url_vector, full_url_y)
+tld_lgs.fit(full_url_vector, full_url_y)
 
 print('Validating')
 for query in bad_queries_tld_test:
@@ -79,4 +68,4 @@ for query in bad_queries_tld_test:
     if prediction:
         print('correct')
     else:
-        print(query)
+        print('wrong')
