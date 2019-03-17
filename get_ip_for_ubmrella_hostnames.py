@@ -5,7 +5,7 @@ import geoip2.database
 
 reader = geoip2.database.Reader('GeoLite2-City.mmdb')
 
-url_csv = pd.read_csv('top-10000.csv')
+url_csv = pd.read_csv('goodqueries_tld_ip.csv')
 
 i = 0
 
@@ -48,4 +48,4 @@ url_csv['latitude'] = latitudes
 url_csv['longitude'] = longitudes
 url_csv.dropna(inplace=True)
 
-url_csv.to_csv('top-10000.csv', index=False)
+url_csv.to_csv('goodqueries_tld_ip.csv', index=False)
